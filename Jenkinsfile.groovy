@@ -8,8 +8,8 @@ def utils = new Utilities(steps)
 
 /* targetFile="dist/rhasta.1.1.0.tar.gz" */
 targetFile="build/hello.jar"
-playbook= "ansible"
-remoteUser="ops"
+playbook= "samples/hellojar"
+remoteUser="root"
 test_url = ""
 uat_url = ""
 prod_url = ""
