@@ -38,15 +38,16 @@ stage('Quick Test') {
 }
 */
 
+// NO Test yet
+// milestone 2
+// stage('Deploy Test') {
+//     node {
+//         remote = new Remote(steps, 'test', remoteUser)
+//         remote.deployAnsible( targetFile )
+//     }
+// }
 
-milestone 2
-stage('Deploy Test') {
-    node {
-        remote = new Remote(steps, 'test', remoteUser)
-        remote.deployAnsible( targetFile )
-    }
-}
-
+milestone 3
 stage('UAT') {
     lock(resource: "${playbook}-UAT", inversePrecedence: true) {
         milestone 3
