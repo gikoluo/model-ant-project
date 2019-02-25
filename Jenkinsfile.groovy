@@ -58,7 +58,7 @@ stage('UAT') {
         node {
             echo 'UAT deploy start'
             remote = new Remote(steps, 'uat', remoteUser)
-            remote.deployAnsible( targetFile )
+            remote.deploy( targetFile )
             echo "UAT deployed"
         }
         
@@ -79,7 +79,7 @@ stage ('Production') {
         node {
             echo 'Production deploy status'
             remote = new Remote(steps, 'prod', remoteUser)
-            remote.deployAnsible( targetFile )
+            remote.deploy( targetFile )
             echo "Production deployed"
         }
         
