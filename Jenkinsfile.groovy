@@ -1,92 +1,92 @@
 #!groovy
 
+//--Part1. Include the library and make utils.
 @Library('luochunhui')
+
 import com.luochunhui.lib.Utilities
 import com.luochunhui.lib.Remote
 
+
 def utils = new Utilities(steps)
 
-/* targetFile="dist/rhasta.1.1.0.tar.gz" */
-targetFile="build/hello.jar"
-playbook= "samples/hellojar"
-remoteUser="root"
-test_url = ""
-uat_url = ""
-prod_url = ""
+
+//--Part2. Get the variables from Jenkins job settings.
+def projectName = env.PROJECT_NAME   //Project name, Usually it is the name of jenkins project folder name.
+def serviceName = env.SERVICE_NAME   //Service name. Usually it is the process name running in the server.
+def buildJob    = env.BUILD_JOB      //Build job in jenkins. 
+def targetFile = env.TARGET_FILE     //Build target.
+def deployConfig = env.DEPLOY_CONFIG     //Automatic deploy Config
+def autoBuild  = true               //set it to true if you like to build the build job manually.
+def playbook = "";                   //the playbook script file to deploy target, default is "${projectName}/${serviceName}"
+def tags = ["update"]
+
+def remoteUser="root"
+def test_url = ""
+def uat_url = ""
+def prod_url = ""
 
 
+
+
+if(env.PLAYBOOK) {
+    playbook = env.PLAYBOOK
+}
+else {
+    playbook = "${projectName}/${serviceName}"
+}
+
+if(env.AUTO_BUILD) {
+    autoBuild = env.AUTO_BUILD.toBoolean()
+}
+
+if(env.TAGS) {
+    tags << env.TAGS
+}
+
+
+
+echo "Deploy ${projectName}/${serviceName} with ${playbook}.yml "
+echo "buildJob: ${buildJob}"
+echo "targetFile: ${targetFile}"
+echo "autoBuild: ${autoBuild}"
+
+//--Part3. workflow for deploy.
 milestone 1
-stage('Dev') {
-    node {
-        checkout scm
-        utils.ant 'jar'
-
-        dir(".") {
-            archiveArtifacts artifacts:targetFile, fingerprint: true
-            stash name:'targetArchive', includes:targetFile
-        }
+stage('Copy Target') {
+    if(autoBuild) {
+        build job: buildJob
+    }
+    node('master') {
+        utils.copyTarget(buildJob, targetFile, BUILD_ID)
     }
 }
 
 
-/*
-milestone 
-stage('Quick Test') {
-    node {
-        deploy( targetFile, playbook, 'uat' )
-    }
-}
-*/
-
-//NO Test yet
 milestone 2
-stage('Deploy Test') {
-    node {
-        echo "Ignore Test deployment"
-    }
+stage('QA') {
+    utils.qaCheck()
 }
 
 milestone 3
-stage('UAT') {
-    lock(resource: "${playbook}-UAT", inversePrecedence: true) {
-        
-        timeout(time:1, unit:'DAYS') {
-            input id: 'pushToUAT', message: "Test环境正常了么？可以提交 UAT 了吗?", ok: '准备好了，发布！', submitter: 'sa'
-        }
-
-        node {
-            echo 'UAT deploy start'
-            remote = new Remote(steps, 'uat', remoteUser)
-            remote.deploy( targetFile )
-            echo "UAT deployed"
-        }
-        
-        timeout(time:1, unit:'DAYS') {
-            input message: " UAT 通过了吗? ${uat_url} ", ok: '通过！', submitter: 'sa'
-        }
-    }
+stage('Test') {
+    remote = new Remote(steps, 'test')
+    remote.deployProcess(playbook, targetFile, BUILD_ID, tags)
 }
 
 milestone 4
-stage ('Production') {
-    lock(resource: "${playbook}-Production", inversePrecedence: true) {
-
-        timeout(time:1, unit:'DAYS') {
-            input message: "可以提交 Prod 了吗?", ok: '准备好了，发布！', submitter: 'sa'
-        }
-        
-        node {
-            echo 'Production deploy status'
-            remote = new Remote(steps, 'prod', remoteUser)
-            remote.deploy( targetFile )
-            echo "Production deployed"
-        }
-        
-        timeout(time:1, unit:'DAYS') {
-            input message: "Prod测试完成了吗? ${prod_url} ", ok: '通过！下班，困觉！', submitter: 'sa'
-        }
-    }
+stage('UAT') {
+    remote = new Remote(steps, 'uat')
+    remote.deployProcess(playbook, targetFile, BUILD_ID, tags)
 }
+
+milestone 5
+stage ('Production') {
+    remote = new Remote(steps, 'prod')
+    remote.deployProcess(playbook, targetFile, BUILD_ID, tags)
+}
+
+utils.finish()
+
 
 
 
