@@ -38,14 +38,13 @@ stage('Quick Test') {
 }
 */
 
-// NO Test yet
-// milestone 
-// stage('Deploy Test') {
-//     node {
-//         remote = new Remote(steps, 'test', remoteUser)
-//         remote.deployAnsible( targetFile )
-//     }
-// }
+//NO Test yet
+milestone 2
+stage('Deploy Test') {
+    node {
+        echo "Ignore Test deployment"
+    }
+}
 
 milestone 3
 stage('UAT') {
