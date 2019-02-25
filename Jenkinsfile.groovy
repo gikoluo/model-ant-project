@@ -30,7 +30,7 @@ stage('Dev') {
 
 
 /*
-milestone 3
+milestone 
 stage('Quick Test') {
     node {
         deploy( targetFile, playbook, 'uat' )
@@ -39,7 +39,7 @@ stage('Quick Test') {
 */
 
 // NO Test yet
-// milestone 2
+// milestone 
 // stage('Deploy Test') {
 //     node {
 //         remote = new Remote(steps, 'test', remoteUser)
@@ -50,7 +50,7 @@ stage('Quick Test') {
 milestone 3
 stage('UAT') {
     lock(resource: "${playbook}-UAT", inversePrecedence: true) {
-        milestone 3
+        
         timeout(time:1, unit:'DAYS') {
             input id: 'pushToUAT', message: "Test环境正常了么？可以提交 UAT 了吗?", ok: '准备好了，发布！', submitter: 'sa'
         }
@@ -68,10 +68,10 @@ stage('UAT') {
     }
 }
 
-
 milestone 4
 stage ('Production') {
     lock(resource: "${playbook}-Production", inversePrecedence: true) {
+
         timeout(time:1, unit:'DAYS') {
             input message: "可以提交 Prod 了吗?", ok: '准备好了，发布！', submitter: 'sa'
         }
